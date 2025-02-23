@@ -1,5 +1,8 @@
 const express = require('express');
+const cors = require('cors'); // Add this line
+
 const app = express();
+app.use(cors()); // Add this line to enable CORS for all origins
 app.use(express.json());
 
 let paymentRequests = [];
@@ -7,11 +10,10 @@ let users = [
   { mobile: '9876543210', balance: 1000 }
 ];
 
-//healthcheck
+// Health Check
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
-
 
 // Store Payment Request
 app.post('/paymentcallback', (req, res) => {
@@ -52,4 +54,6 @@ app.post('/updatebalance', (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+// Use environment variable PORT or default to 3000
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
