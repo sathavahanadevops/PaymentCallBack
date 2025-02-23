@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit UTR Number</title>
+</head>
+<body>
+    <h2>Submit UTR Number</h2>
+    <p>Your Mobile Number: <span id="mobileDisplay"></span></p>
+    <label>Enter UTR Number</label>
+    <input type="text" id="utrNumber" placeholder="Enter UTR Number" required>
+    <button onclick="submitUTR()">Submit</button>
+    <p id="statusMessage"></p>
+
+    <script>
+        // Retrieve mobile number from localStorage
+        const mobile = localStorage.getItem('mobile');
+        
+        // Display the mobile number
+        document.getElementById('mobileDisplay').textContent = mobile;
+    
+        // Function to handle UTR submission
+        function submitUTR() {
+            const utrNumber = document.getElementById('utrNumber').value;
+            
+            if (!utrNumber) {
+                alert("Please enter a UTR Number.");
+                return;
+            }
+    
+            // Debug: Check the data being sent
+            console.log('Sending Data:', { mobile: mobile, utrNumber: utrNumber });
+    
+            // Send the UTR number to the backend
+            fetch('https://paymentcallback.onrender.com/submit-utr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    mobile: mobile, 
+                    utrNumber: utrNumber 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('UTR Submitted:', data);
+                document.getElementById('statusMessage').textContent = "UTR Submitted Successfully!";
+                
+                // **Add this alert for confirmation:**
+                alert("UTR Submitted Successfully!");
+                
+                // Optionally, clear the input field
+                document.getElementById('utrNumber').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('statusMessage').textContent = "Error Submitting UTR.";
+                
+                // **Add this alert for error:**
+                alert("Error Submitting UTR.");
+            });
+        }
+    </script>
+</body>
+</html>
