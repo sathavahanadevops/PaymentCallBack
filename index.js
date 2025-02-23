@@ -8,8 +8,8 @@ let users = [
 ];
 
 //healthcheck
-app.get('/', (req, res) => {
-    res.send('Payment App is Running on Render!');
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
 });
 
 
