@@ -12,14 +12,23 @@ let utrData = {}; // Store UTR and mobile number temporarily
 
 // Endpoint to receive UTR and mobile number from utr.html
 app.post('/submit-utr', (req, res) => {
-  const { utr, mobile } = req.body;
-  utrData = { utr, mobile };
-  res.json({ message: 'UTR and Mobile Number Received' });
+    const { mobile, utrNumber } = req.body;
+
+    // Store both in-memory (for demo purposes)
+    utrData.mobile = mobile;
+    utrData.utrNumber = utrNumber;
+
+    console.log('Received UTR:', utrData);
+
+    res.json({ message: 'UTR Received', data: utrData });
 });
 
 // Endpoint to get the latest UTR and mobile number for display.html
 app.get('/get-utr', (req, res) => {
-  res.json(utrData);
+    res.json({ 
+        mobile: utrData.mobile,
+        utrNumber: utrData.utrNumber  // Send UTR Number along with mobile
+    });
 });
 
 // Serve utr.html and display.html
