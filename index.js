@@ -7,6 +7,12 @@ let users = [
   { mobile: '9876543210', balance: 1000 }
 ];
 
+//healthcheck
+app.get('/', (req, res) => {
+    res.send('Payment App is Running on Render!');
+});
+
+
 // Store Payment Request
 app.post('/paymentcallback', (req, res) => {
   const { utrNumber, mobile } = req.body;
