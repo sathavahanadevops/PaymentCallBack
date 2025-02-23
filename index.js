@@ -1,4 +1,3 @@
-app.use(express.static(path.join(__dirname, 'public')));
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -7,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('views'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 let utrData = {}; // Store UTR and mobile number temporarily
 
