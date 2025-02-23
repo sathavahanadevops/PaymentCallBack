@@ -8,17 +8,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('views'));
 
-let utrNumber = ''; // Store UTR temporarily
+let utrData = {}; // Store UTR and mobile number temporarily
 
-// Endpoint to receive UTR from utr.html
+// Endpoint to receive UTR and mobile number from utr.html
 app.post('/submit-utr', (req, res) => {
-  utrNumber = req.body.utr;
-  res.json({ message: 'UTR Received' });
+  const { utr, mobile } = req.body;
+  utrData = { utr, mobile };
+  res.json({ message: 'UTR and Mobile Number Received' });
 });
 
-// Endpoint to get the latest UTR for display.html
+// Endpoint to get the latest UTR and mobile number for display.html
 app.get('/get-utr', (req, res) => {
-  res.json({ utr: utrNumber });
+  res.json(utrData);
 });
 
 // Serve utr.html and display.html
