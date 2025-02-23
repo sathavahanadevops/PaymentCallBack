@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UTR Display</title>
+</head>
+<body>
+  <h2>Submitted UTR Details</h2>
+  <p>Mobile Number: <span id="displayMobile"></span></p>
+  <p>UTR Number: <span id="displayUTR"></span></p>
+  
+
+  <script>
+    // Fetch and display UTR and mobile number
+    function fetchUTR() {
+        fetch('https://paymentcallback.onrender.com/get-utr')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('displayMobile').textContent = data.mobile || 'N/A';
+            document.getElementById('displayUTR').textContent = data.utrNumber || 'N/A';
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Fetch UTR details every 2 seconds
+    setInterval(fetchUTR, 2000);
+</script>
+</body>
+</html>
