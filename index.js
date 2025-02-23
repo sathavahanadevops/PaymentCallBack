@@ -1,14 +1,21 @@
 const express = require('express');
-const cors = require('cors'); // Add this line
+const cors = require('cors');
 
 const app = express();
-app.use(cors()); // Add this line to enable CORS for all origins
+app.use(cors());
 app.use(express.json());
 
+// Mock Database
 let paymentRequests = [];
 let users = [
   { mobile: '9876543210', balance: 1000 }
 ];
+
+// Hardcoded Admin Credentials (Change for Production!)
+const adminCredentials = {
+  username: 'admin',
+  password: 'securepassword'  // Change this to a stronger password!
+};
 
 // Health Check
 app.get('/health', (req, res) => {
@@ -17,40 +24,72 @@ app.get('/health', (req, res) => {
 
 // Store Payment Request
 app.post('/paymentcallback', (req, res) => {
-  const { utrNumber, mobile } = req.body;
-  paymentRequests.push({ utrNumber, mobile, status: 'pending' });
-  res.json({ success: true, message: 'Payment submitted, awaiting verification' });
+  const { utr, mobile } = req.body;
+  if (utr && mobile) {
+    paymentRequests.push({ utr, mobile, status: 'pending' });
+    res.json({ success: true, message: 'Payment submitted, awaiting verification' });
+  } else {
+    res.status(400).json({ success: false, message: 'UTR and Mobile are required' });
+  }
 });
 
 // Check Payment Status
 app.get('/paymentstatus', (req, res) => {
-  const { utrNumber, mobile } = req.query;
-  const payment = paymentRequests.find(p => p.utrNumber === utrNumber && p.mobile === mobile);
-  res.json({ success: true, status: payment ? payment.status : 'not_found' });
-});
-
-// Verify Payment
-app.post('/verify', (req, res) => {
-  const { utrNumber, mobile, amount } = req.body;
-  const payment = paymentRequests.find(p => p.utrNumber === utrNumber && p.mobile === mobile);
+  const { utr, mobile } = req.query;
+  const payment = paymentRequests.find(p => p.utr === utr && p.mobile === mobile);
 
   if (payment) {
-    payment.status = 'verified';
-    const user = users.find(u => u.mobile === mobile);
-    if (user) {
-      user.balance += parseInt(amount);
-    }
-    res.json({ success: true, message: 'Payment Verified' });
+    res.json({ success: true, status: payment.status });
+  } else {
+    res.json({ success: false, status: 'not_found' });
   }
 });
 
-// Update Balance
-app.post('/updatebalance', (req, res) => {
-  const { mobile, amount } = req.body;
-  const user = users.find(u => u.mobile === mobile);
-  if (user) {
-    user.balance += parseInt(amount);
-    res.json({ success: true, balance: user.balance });
+// Admin Login
+app.post('/admin/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === adminCredentials.username && password === adminCredentials.password) {
+    res.json({ success: true, message: 'Admin authenticated' });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid credentials' });
+  }
+});
+
+// Get Pending Payment Requests (Admin Only)
+app.get('/admin/pending', (req, res) => {
+  res.json(paymentRequests.filter(p => p.status === 'pending'));
+});
+
+// Verify Payment (Admin Only)
+app.post('/verify', (req, res) => {
+  const { utr, mobile, amount } = req.body;
+  const payment = paymentRequests.find(p => p.utr === utr && p.mobile === mobile);
+
+  if (payment && payment.status === 'pending') {
+    payment.status = 'verified';
+    const user = users.find(u => u.mobile === mobile);
+
+    if (user) {
+      user.balance += parseInt(amount);
+    }
+
+    res.json({ success: true, message: 'Payment Verified' });
+  } else {
+    res.status(404).json({ success: false, message: 'Payment not found or already verified' });
+  }
+});
+
+// Reject Payment (Admin Only)
+app.post('/reject', (req, res) => {
+  const { utr, mobile } = req.body;
+  const payment = paymentRequests.find(p => p.utr === utr && p.mobile === mobile);
+
+  if (payment && payment.status === 'pending') {
+    payment.status = 'failed';
+    res.json({ success: true, message: 'Payment Rejected' });
+  } else {
+    res.status(404).json({ success: false, message: 'Payment not found or already processed' });
   }
 });
 
