@@ -3,7 +3,7 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors({
-    origin: 'https://your-frontend-domain.com', // Replace with your frontend URL
+    origin: 'https://paymentcallback.onrender.com', // Replace with your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
