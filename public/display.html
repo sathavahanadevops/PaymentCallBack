@@ -9,10 +9,12 @@
   <h2>Submitted UTR Details</h2>
   <p>Mobile Number: <span id="displayMobile"></span></p>
   <p>UTR Number: <span id="displayUTR"></span></p>
-  
+  <label>Enter Amount: </label>
+  <input type="text" id="amount" placeholder="Enter Amount" required>
+  <button onclick="submitAmount()">Submit Amount</button>
+  <p id="statusMessage"></p>
 
   <script>
-    // Fetch and display UTR and mobile number
     function fetchUTR() {
         fetch('https://paymentcallback.onrender.com/get-utr')
         .then(response => response.json())
@@ -23,8 +25,43 @@
         .catch(error => console.error('Error:', error));
     }
 
-    // Fetch UTR details every 2 seconds
     setInterval(fetchUTR, 2000);
-</script>
+
+    function submitAmount() {
+        const amount = document.getElementById('amount').value;
+        const mobile = document.getElementById('displayMobile').textContent;
+        const utrNumber = document.getElementById('displayUTR').textContent;
+
+        if (!amount) {
+            alert("Please enter an Amount.");
+            return;
+        }
+
+        fetch('https://paymentcallback.onrender.com/submit-amount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                mobile: mobile, 
+                utrNumber: utrNumber, 
+                amount: amount 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('statusMessage').textContent = "Amount Submitted Successfully!";
+            alert("Amount Submitted Successfully!");
+            
+            // Notify utr.html to close progress bar
+            localStorage.setItem('amountStatus', 'submitted');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('statusMessage').textContent = "Error Submitting Amount.";
+            alert("Error Submitting Amount.");
+        });
+    }
+  </script>
 </body>
 </html>
