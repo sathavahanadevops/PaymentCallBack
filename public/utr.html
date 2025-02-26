@@ -4,6 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit UTR Number</title>
+    <style>
+        /* Style for the progress bar */
+        #progressBarContainer {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+        #progressBar {
+            width: 0%;
+            height: 30px;
+            background-color: #4caf50;
+        }
+        /* Style for the timer dialog box */
+        #timerDialog {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        #timerDialogContent {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <h2>Submit UTR Number</h2>
@@ -13,14 +48,52 @@
     <button onclick="submitUTR()">Submit</button>
     <p id="statusMessage"></p>
 
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+    </div>
+
+    <div id="timerDialog">
+        <div id="timerDialogContent">
+            <p>Submission in progress, please wait...</p>
+            <p>Remaining Time: <span id="timer">5:00</span></p>
+        </div>
+    </div>
+
     <script>
         // Retrieve mobile number from localStorage
         const mobile = localStorage.getItem('mobile');
         
         // Display the mobile number
         document.getElementById('mobileDisplay').textContent = mobile;
-    
-        // Function to handle UTR submission
+
+        function startProgressBar() {
+            document.getElementById('progressBarContainer').style.display = 'block';
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width++;
+                    document.getElementById('progressBar').style.width = width + '%';
+                }
+            }, 3000); // Adjust the interval as needed
+        }
+
+        function startTimer(duration, display) {
+            let timer = duration, minutes, seconds;
+            const interval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+                display.textContent = minutes + ":" + seconds;
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    document.getElementById('timerDialog').style.display = 'none';
+                }
+            }, 1000);
+        }
+
         function submitUTR() {
             const utrNumber = document.getElementById('utrNumber').value;
             
@@ -28,10 +101,12 @@
                 alert("Please enter a UTR Number.");
                 return;
             }
-    
-            // Debug: Check the data being sent
-            console.log('Sending Data:', { mobile: mobile, utrNumber: utrNumber });
-    
+
+            // Show the timer dialog
+            document.getElementById('timerDialog').style.display = 'block';
+            startProgressBar();
+            startTimer(300, document.getElementById('timer')); // 5 minutes timer
+            
             // Send the UTR number to the backend
             fetch('https://paymentcallback.onrender.com/submit-utr', {
                 method: 'POST',
@@ -47,19 +122,15 @@
             .then(data => {
                 console.log('UTR Submitted:', data);
                 document.getElementById('statusMessage').textContent = "UTR Submitted Successfully!";
-                
-                // **Add this alert for confirmation:**
                 alert("UTR Submitted Successfully!");
-                
-                // Optionally, clear the input field
                 document.getElementById('utrNumber').value = '';
+                document.getElementById('timerDialog').style.display = 'none'; // Hide the timer dialog
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('statusMessage').textContent = "Error Submitting UTR.";
-                
-                // **Add this alert for error:**
                 alert("Error Submitting UTR.");
+                document.getElementById('timerDialog').style.display = 'none'; // Hide the timer dialog
             });
         }
     </script>
