@@ -9,8 +9,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Add this line to fix the ReferenceError:
+let utrData = {}; // Store UTR and mobile number temporarily
+
 // MongoDB Connection
-const mongoURI = 'mongodb+srv://sathavahana:Kalava1%40%2E@project2025.frxyb.mongodb.net/Project2025?retryWrites=true&w=majority&appName=Project2025';
+const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
@@ -22,7 +25,6 @@ const utrSchema = new mongoose.Schema({
     amount: String,
     createdAt: { type: Date, default: Date.now }
 });
-
 const UTR = mongoose.model('UTR', utrSchema);
 
 // Endpoint to receive UTR and mobile number from utr.html
@@ -47,7 +49,7 @@ app.get('/get-utr', (req, res) => {
     });
 });
 
-// **New Endpoint to receive Amount and store in MongoDB**
+// Endpoint to receive Amount and store in MongoDB
 app.post('/submit-amount', async (req, res) => {
     const { mobile, utrNumber, amount } = req.body;
 
@@ -69,7 +71,6 @@ app.post('/submit-amount', async (req, res) => {
 app.get('/utr', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'utr.html'));
 });
-
 app.get('/display', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'display.html'));
 });
