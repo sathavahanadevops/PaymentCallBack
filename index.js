@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 
 const app = express();
 app.use(cors());
@@ -9,11 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Add this line to fix the ReferenceError:
-let utrData = {}; // Store UTR and mobile number temporarily
-
-// MongoDB Connection
-const mongoURI = process.env.MONGO_URI;
+// Add this directly for now:
+const mongoURI = 'mongodb+srv://sathavahana:Kalava1%40%2E@project2025.frxyb.mongodb.net/Project2025?retryWrites=true&w=majority&appName=Project2025';
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
