@@ -50,17 +50,25 @@ app.post('/submit-utr', async (req, res) => {
     }
 });
 
-// Modify /get-utr to return all UTRs
+// 🔹 Endpoint to Get the Latest UTR
 app.get('/get-utr', async (req, res) => {
     try {
-        const allUTRs = await UTR.find().sort({ createdAt: -1 }); // Return all UTRs, sorted by creation date
-        if (!allUTRs || allUTRs.length === 0) {
-            return res.json({ message: "No UTRs Found" });
+        const latestUTR = await UTR.findOne().sort({ createdAt: -1 });
+
+        if (!latestUTR) {
+            return res.json({ message: "No UTR Found", mobile: 'N/A', utrNumber: 'N/A', amount: 'N/A' });
         }
-        res.json(allUTRs);
+
+        res.json({ 
+            _id: latestUTR._id, 
+            mobile: latestUTR.mobile, 
+            utrNumber: latestUTR.utrNumber, 
+            amount: latestUTR.amount 
+        });
+
     } catch (error) {
-        console.error('❌ Error Fetching UTRs:', error);
-        res.status(500).json({ message: 'Error Fetching UTRs', error });
+        console.error('❌ Error Fetching UTR:', error);
+        res.status(500).json({ message: 'Error Fetching UTR', error });
     }
 });
 
