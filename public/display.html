@@ -3,68 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UTR Display & Update Amount</title>
+    <title>Display and Update UTRs</title>
+    <style>
+        /* Styling for the page */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background: rgb(4, 4, 78);
+            color: white;
+        }
+        input, button {
+            padding: 12px;
+            margin: 10px;
+            width: 90%;
+            max-width: 300px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+        }
+        button {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 75, 43, 0.5);
+        }
+        .utr-container {
+            margin: 20px auto;
+            width: 80%;
+        }
+        .utr-row {
+            margin: 10px 0;
+        }
+        .utr-row input {
+            width: 60%;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Submitted UTR Details</h2>
-    <div id="utrList"></div>
-
-    <label>Update Amount:</label>
-    <input type="number" id="amountInput" placeholder="Enter Amount">
-    <button onclick="updateAmount()">Update</button>
+    <h1>Update UTR Amounts</h1>
+    <div class="utr-container" id="utrContainer">
+        <!-- UTR fields will be dynamically inserted here -->
+    </div>
 
     <script>
-        // Fetch and display all UTRs
-        function fetchUTRs() {
+        // Fetch all UTRs when the page loads
+        window.onload = function() {
             fetch('https://paymentcallback.onrender.com/get-utr')
-            .then(response => response.json())
-            .then(data => {
-                const utrList = document.getElementById('utrList');
-                utrList.innerHTML = '';  // Clear the existing list
-                data.forEach(utr => {
-                    const utrItem = document.createElement('div');
-                    utrItem.innerHTML = `
-                        <p>Mobile: ${utr.mobile}</p>
-                        <p>UTR Number: ${utr.utrNumber}</p>
-                        <p>Amount: ${utr.amount || 'N/A'}</p>
-                        <hr>
-                    `;
-                    utrList.appendChild(utrItem);
-                });
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message && data.message === "No UTRs Found") {
+                        alert("No UTR records found.");
+                    } else {
+                        displayUTRs(data);
+                    }
+                })
+                .catch(error => console.error('Error fetching UTRs:', error));
+        };
+
+        // Display all UTRs with amount input fields and individual submit buttons
+        function displayUTRs(utrs) {
+            const container = document.getElementById('utrContainer');
+            container.innerHTML = ''; // Clear any existing data
+
+            utrs.forEach(utr => {
+                const row = document.createElement('div');
+                row.className = 'utr-row';
+                row.innerHTML = `
+                    <span>${utr.mobile} - ${utr.utrNumber}</span>
+                    <input type="text" id="amount_${utr._id}" value="${utr.amount}" placeholder="Enter Amount">
+                    <button onclick="submitAmount('${utr._id}')">Submit</button>
+                `;
+                container.appendChild(row);
+            });
         }
 
-        // Call fetchUTRs every 5 seconds to keep the list updated
-        setInterval(fetchUTRs, 5000);
+        // Submit the updated amount for a specific UTR
+        function submitAmount(utrId) {
+            const amountInput = document.getElementById(`amount_${utrId}`);
+            const amount = amountInput.value;
 
-        // Function to update the amount for a UTR
-        function updateAmount() {
-            const amount = document.getElementById('amountInput').value;
             if (!amount) {
-                alert("Please enter an amount.");
+                alert("⚠️ Please enter a valid amount.");
                 return;
             }
-            
-            // Assuming you will handle the logic of which UTR to update
-            const utrId = 'some-utr-id';  // Replace with dynamic utrId from the UI
+
             fetch('https://paymentcallback.onrender.com/update-amount', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ utrId, amount })
             })
             .then(response => response.json())
             .then(data => {
-                alert("Amount Updated Successfully!");
-                fetchUTRs(); // Refresh the UTR list
+                alert("Amount updated successfully!");
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert("Error updating amount.");
+                console.error('Error updating amount:', error);
+                alert("❌ Error updating amount.");
             });
         }
-
-        fetchUTRs(); // Initial call to load UTRs
     </script>
 </body>
 </html>
