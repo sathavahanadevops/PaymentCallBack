@@ -11,7 +11,14 @@
   <p>UTR Number: <span id="displayUTR"></span></p>
   <p>Amount: <span id="displayAmount"></span></p>
 
+  <!-- Input Field for Updating Amount -->
+  <label>Update Amount:</label>
+  <input type="text" id="amountInput" placeholder="Enter Amount">
+  <button onclick="updateAmount()">Update Amount</button>
+
   <script>
+    let latestUtrId = null;
+
     // Fetch and display UTR and mobile number
     function fetchUTR() {
         fetch('https://paymentcallback.onrender.com/get-utr')
@@ -19,9 +26,48 @@
         .then(data => {
             document.getElementById('displayMobile').textContent = data.mobile || 'N/A';
             document.getElementById('displayUTR').textContent = data.utrNumber || 'N/A';
-            document.getElementById('displayAmount').textContent = data.amount || 'N/A'; // Display amount
+            document.getElementById('displayAmount').textContent = data.amount || 'N/A';
+
+            // Store the latest UTR record ID for updating
+            latestUtrId = data._id;
         })
         .catch(error => console.error('Error:', error));
+    }
+
+    // Function to update amount in MongoDB
+    function updateAmount() {
+        const amount = document.getElementById('amountInput').value;
+
+        if (!amount) {
+            alert("Please enter an amount.");
+            return;
+        }
+
+        if (!latestUtrId) {
+            alert("No UTR record found to update.");
+            return;
+        }
+
+        // Send updated amount to the backend
+        fetch('https://paymentcallback.onrender.com/update-amount', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ utrId: latestUtrId, amount: amount })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Amount Updated:', data);
+            alert("Amount Updated Successfully!");
+
+            // Refresh displayed data
+            fetchUTR();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Error Updating Amount.");
+        });
     }
 
     // Fetch UTR details every 2 seconds
