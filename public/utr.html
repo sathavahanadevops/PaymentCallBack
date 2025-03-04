@@ -5,14 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit UTR Number</title>
     <style>
-        #progressContainer {
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            width: 90%;
+            max-width: 300px;
+            font-size: 16px;
+        }
+        #progressModal {
             display: none;
-            margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        #progressBarContainer {
             width: 100%;
-            height: 30px;
             background: #ddd;
+            height: 25px;
             border-radius: 5px;
-            position: relative;
+            margin-top: 10px;
         }
         #progressBar {
             height: 100%;
@@ -23,7 +47,7 @@
         }
         #countdown {
             margin-top: 10px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
         }
     </style>
@@ -31,15 +55,17 @@
 <body>
     <h2>Submit UTR Number</h2>
     <p>Your Mobile Number: <span id="mobileDisplay"></span></p>
-    <label>Enter UTR Number</label>
     <input type="text" id="utrNumber" placeholder="Enter UTR Number" required>
     <button onclick="submitUTR()">Submit</button>
-    
-    <div id="progressContainer">
-        <div id="progressBar"></div>
+
+    <!-- Processing Modal -->
+    <div id="progressModal">
+        <h3>Processing Payment...</h3>
+        <div id="progressBarContainer">
+            <div id="progressBar"></div>
+        </div>
+        <p id="countdown">Time remaining: 300 sec</p>
     </div>
-    <p id="countdown"></p>
-    <p id="statusMessage"></p>
 
     <script>
         let countdownInterval;
@@ -64,8 +90,8 @@
                 if (data.data) {
                     utrId = data.data._id; // Store UTR ID
                 }
-                document.getElementById('statusMessage').textContent = "UTR Submitted Successfully!";
-                startCountdown();
+                showProcessingModal();
+                checkAmountUpdate();
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -73,13 +99,16 @@
             });
         }
 
+        function showProcessingModal() {
+            document.getElementById('progressModal').style.display = "block";
+            startCountdown();
+        }
+
         function startCountdown() {
             let timeLeft = 300; // 5 minutes (300 seconds)
             const progressBar = document.getElementById("progressBar");
-            const progressContainer = document.getElementById("progressContainer");
             const countdownText = document.getElementById("countdown");
 
-            progressContainer.style.display = "block";
             countdownInterval = setInterval(() => {
                 timeLeft--;
                 progressBar.style.width = ((300 - timeLeft) / 300) * 100 + "%";
@@ -90,9 +119,6 @@
                     countdownText.textContent = "Timeout! Try again.";
                 }
             }, 1000);
-            
-            // Check for amount update
-            checkAmountUpdate();
         }
 
         function checkAmountUpdate() {
@@ -105,8 +131,8 @@
                     if (data.amount && data.amount !== 'N/A') {
                         clearInterval(interval);
                         clearInterval(countdownInterval);
-                        document.getElementById("progressContainer").style.display = "none";
-                        document.getElementById("countdown").textContent = "✅ Amount Processed Successfully!";
+                        document.getElementById("progressModal").style.display = "none";
+                        alert("✅ Amount Processed Successfully!");
                     }
                 })
                 .catch(error => console.error('Error:', error));
