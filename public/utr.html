@@ -187,15 +187,16 @@
         function checkAmountUpdate(utrId) {
         const interval = setInterval(() => {
             if (!utrId) return;
-            fetch(`https://paymentcallback.onrender.com/get-utr`)
+            fetch('https://paymentcallback.onrender.com/get-utr')
             .then(response => response.json())
-            .then(data => {
-                // Find the updated UTR by checking if its amount has changed
-                const updatedUTR = data.find(utr => utr._id === utrId);
+            .then(allUTRs => {
+                // Find the updated UTR by its unique ID
+                const updatedUTR = allUTRs.find(utr => utr._id === utrId);
     
-                // If the amount is updated and not 'N/A', hide the modal
+                // Check if the UTR's amount has been updated
                 if (updatedUTR && updatedUTR.amount && updatedUTR.amount !== 'N/A') {
                     clearInterval(interval);
+                    // Close the modal and overlay once the amount is updated
                     document.getElementById("progressModal").style.display = "none";
                     document.getElementById('overlay').style.display = "none";
                     alert("✅ Amount Processed Successfully!");
@@ -206,7 +207,7 @@
                 }
             })
             .catch(error => console.error('Error:', error));
-        }, 5000); // Check every 5 seconds
+        }, 3000); // Check every 3 seconds
     }
 
         function confettiEffect() {
