@@ -4,14 +4,16 @@ const path = require('path');
 const mongoose = require('mongoose');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-
 const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Directly Added MongoDB Connection String (Updated)
+// Define utrData to avoid undefined variable error
+let utrData = {};
+
+// MongoDB Connection
 const mongoURI = 'mongodb+srv://sathavahana:Kalava1%40%2E@project2025.frxyb.mongodb.net/Project2025?retryWrites=true&w=majority&appName=Project2025';
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB'))
@@ -26,39 +28,32 @@ const utrSchema = new mongoose.Schema({
 });
 const UTR = mongoose.model('UTR', utrSchema);
 
-// Endpoint to receive UTR and mobile number from utr.html
+// Endpoint to receive UTR and mobile number
 app.post('/submit-utr', (req, res) => {
     const { mobile, utrNumber } = req.body;
-
-    // Store UTR and Mobile in-memory for display
-    utrData.mobile = mobile;
-    utrData.utrNumber = utrNumber;
-
+    utrData = { mobile, utrNumber };
     console.log('Received UTR:', utrData);
-
     res.json({ message: 'UTR Received', data: utrData });
 });
 
-// Endpoint to get the latest UTR and mobile number for display.html
-app.get('/get-utr', (req, res) => {
-    res.json({ 
-        mobile: utrData.mobile,
-        utrNumber: utrData.utrNumber,
-        amount: utrData.amount || 'N/A' // Send Amount if available
-    });
+// Endpoint to get the latest UTR details from MongoDB
+app.get('/get-utr', async (req, res) => {
+    try {
+        const latestUTR = await UTR.findOne().sort({ createdAt: -1 });
+        res.json(latestUTR || { mobile: 'N/A', utrNumber: 'N/A', amount: 'N/A' });
+    } catch (error) {
+        console.error('Error fetching latest UTR:', error);
+        res.status(500).json({ message: 'Error fetching data' });
+    }
 });
 
 // Endpoint to receive Amount and store in MongoDB
 app.post('/submit-amount', async (req, res) => {
     const { mobile, utrNumber, amount } = req.body;
-
     try {
-        // Save to MongoDB
         const newUTR = new UTR({ mobile, utrNumber, amount });
         await newUTR.save();
-
         console.log('Amount Stored in MongoDB:', newUTR);
-
         res.json({ message: 'Amount Stored Successfully', data: newUTR });
     } catch (error) {
         console.error('Error Storing Amount:', error);
@@ -66,20 +61,20 @@ app.post('/submit-amount', async (req, res) => {
     }
 });
 
-// Serve utr.html and display.html
+// Serve frontend files
 app.get('/utr', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'utr.html'));
+    res.sendFile(path.join(__dirname, 'views', 'utr.html'));
 });
 app.get('/display', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'display.html'));
+    res.sendFile(path.join(__dirname, 'views', 'display.html'));
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'UP' });
+    res.json({ status: 'UP' });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
