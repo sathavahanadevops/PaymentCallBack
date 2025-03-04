@@ -64,33 +64,33 @@ app.get('/get-utr', async (req, res) => {
     }
 });
 
-// 🔹 Endpoint to Update the Amount for a UTR Record
+// Endpoint to Update Amount for a Single UTR
 app.put('/update-amount', async (req, res) => {
     const { utrId, amount } = req.body;
 
     if (!utrId || !amount) {
-        return res.status(400).json({ message: "UTR ID and amount are required" });
+        return res.status(400).json({ message: 'Missing UTR ID or Amount' });
     }
 
     try {
+        // Find the UTR by its ID and update the amount
         const updatedUTR = await UTR.findByIdAndUpdate(
-            utrId, 
-            { $set: { amount: amount } }, 
-            { new: true }
+            utrId,
+            { $set: { amount: amount } },
+            { new: true } // Return the updated document
         );
 
         if (!updatedUTR) {
-            return res.status(404).json({ message: "UTR Record Not Found" });
+            return res.status(404).json({ message: 'UTR not found' });
         }
 
-        console.log('✅ Amount Updated:', updatedUTR);
-        res.json({ message: "Amount Updated Successfully", data: updatedUTR });
-
+        res.json({ message: 'Amount updated successfully', updatedUTR });
     } catch (error) {
-        console.error('❌ Error Updating Amount:', error);
-        res.status(500).json({ message: 'Error Updating Amount', error });
+        console.error('❌ Error updating amount:', error);
+        res.status(500).json({ message: 'Error updating amount', error });
     }
 });
+
 
 // 🔹 Serve `utr.html` and `display.html`
 app.get('/utr', (req, res) => {
