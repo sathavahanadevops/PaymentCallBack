@@ -185,25 +185,29 @@
         }
 
         function checkAmountUpdate(utrId) {
-            const interval = setInterval(() => {
-                if (!utrId) return;
-                fetch(`https://paymentcallback.onrender.com/get-utr`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.amount && data.amount !== 'N/A') {
-                        clearInterval(interval);
-                        document.getElementById("progressModal").style.display = "none";
-                        document.getElementById('overlay').style.display = "none";
-                        alert("✅ Amount Processed Successfully!");
-                        confettiEffect();
-                        setTimeout(() => {
-                            window.location.href = "https://app.revelaservices.in"; // Redirect to the specified URL
-                        }, 2000); // Wait for the confetti effect to complete
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }, 5000);
-        }
+        const interval = setInterval(() => {
+            if (!utrId) return;
+            fetch(`https://paymentcallback.onrender.com/get-utr`)
+            .then(response => response.json())
+            .then(data => {
+                // Find the updated UTR by checking if its amount has changed
+                const updatedUTR = data.find(utr => utr._id === utrId);
+    
+                // If the amount is updated and not 'N/A', hide the modal
+                if (updatedUTR && updatedUTR.amount && updatedUTR.amount !== 'N/A') {
+                    clearInterval(interval);
+                    document.getElementById("progressModal").style.display = "none";
+                    document.getElementById('overlay').style.display = "none";
+                    alert("✅ Amount Processed Successfully!");
+                    confettiEffect();
+                    setTimeout(() => {
+                        window.location.href = "https://app.revelaservices.in"; // Redirect to the specified URL
+                    }, 2000); // Wait for the confetti effect to complete
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }, 5000); // Check every 5 seconds
+    }
 
         function confettiEffect() {
             confetti({
