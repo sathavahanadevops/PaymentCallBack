@@ -1,59 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UTR Display & Update Amount</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTR Display & Update Amount</title>
 </head>
 <body>
-  <h2>Submitted UTR Details</h2>
-  <p>Mobile Number: <span id="displayMobile"></span></p>
-  <p>UTR Number: <span id="displayUTR"></span></p>
-  <p>Amount: <span id="displayAmount"></span></p>
+    <h2>Submitted UTR Details</h2>
+    <div id="utrList"></div>
 
-  <label>Update Amount:</label>
-  <input type="number" id="amountInput" placeholder="Enter Amount">
-  <button onclick="updateAmount()">Update</button>
+    <label>Update Amount:</label>
+    <input type="number" id="amountInput" placeholder="Enter Amount">
+    <button onclick="updateAmount()">Update</button>
 
-  <script>
-    let utrId = null;
-
-    function fetchUTR() {
-        fetch('https://paymentcallback.onrender.com/get-utr')
-        .then(response => response.json())
-        .then(data => {
-            utrId = data._id; // Store UTR ID
-            document.getElementById('displayMobile').textContent = data.mobile || 'N/A';
-            document.getElementById('displayUTR').textContent = data.utrNumber || 'N/A';
-            document.getElementById('displayAmount').textContent = data.amount || 'N/A';
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function updateAmount() {
-        const amount = document.getElementById('amountInput').value;
-        if (!amount) {
-            alert("Please enter an amount.");
-            return;
+    <script>
+        // Fetch and display all UTRs
+        function fetchUTRs() {
+            fetch('https://paymentcallback.onrender.com/get-utr')
+            .then(response => response.json())
+            .then(data => {
+                const utrList = document.getElementById('utrList');
+                utrList.innerHTML = '';  // Clear the existing list
+                data.forEach(utr => {
+                    const utrItem = document.createElement('div');
+                    utrItem.innerHTML = `
+                        <p>Mobile: ${utr.mobile}</p>
+                        <p>UTR Number: ${utr.utrNumber}</p>
+                        <p>Amount: ${utr.amount || 'N/A'}</p>
+                        <hr>
+                    `;
+                    utrList.appendChild(utrItem);
+                });
+            })
+            .catch(error => console.error('Error:', error));
         }
 
-        fetch('https://paymentcallback.onrender.com/update-amount', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ utrId, amount })
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert("Amount Updated Successfully!");
-            fetchUTR(); // Refresh the displayed data
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Error updating amount.");
-        });
-    }
+        // Call fetchUTRs every 5 seconds to keep the list updated
+        setInterval(fetchUTRs, 5000);
 
-    setInterval(fetchUTR, 5000); // Refresh every 5 seconds
-  </script>
+        // Function to update the amount for a UTR
+        function updateAmount() {
+            const amount = document.getElementById('amountInput').value;
+            if (!amount) {
+                alert("Please enter an amount.");
+                return;
+            }
+            
+            // Assuming you will handle the logic of which UTR to update
+            const utrId = 'some-utr-id';  // Replace with dynamic utrId from the UI
+            fetch('https://paymentcallback.onrender.com/update-amount', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ utrId, amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Amount Updated Successfully!");
+                fetchUTRs(); // Refresh the UTR list
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Error updating amount.");
+            });
+        }
+
+        fetchUTRs(); // Initial call to load UTRs
+    </script>
 </body>
 </html>
