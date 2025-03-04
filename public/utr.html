@@ -9,7 +9,8 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 20px;
-            background: #f0f0f0;
+            background: rgb(4, 4, 78); /* Change background to blue */
+            color: white; /* Ensure text is visible on blue background */
         }
         input, button {
             padding: 12px;
@@ -75,16 +76,50 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 1000; /* Ensure the overlay is below the modal */
         }
+        .qr-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .qr-container img {
+            max-width: 200px;
+            margin: 10px 0;
+        }
+        .upi-id {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .payment-methods img {
+            max-width: 50px;
+            margin: 5px;
+        }
+        
     </style>
 </head>
 <body>
-    <h2>Submit UTR Number</h2>
+    <h1>Credify Money</h1>
+    <h3>Scan the QR code to make the payment.<h3>
+    <h3>Submit UTR Number</h3>
+    <div class="qr-container">
+        <img src="qr.jpg" alt="QR Scanner">
+        <div class="upi-id">9966717414-2@axl</div>
+        <div class="payment-methods">
+            <img src="phonepe.png" alt="PhonePe">
+            <img src="gpay.png" alt="Google Pay">
+            <img src="upi.jpg"alt="UPI">
+            <img src="paytm.png" alt="Paytm">
+        </div>
+    </div>
     <p>Your Mobile Number: <span id="mobileDisplay"></span></p>
     <input type="text" id="utrNumber" placeholder="Enter UTR Number" required>
     <button onclick="submitUTR()">Submit</button>
-
+    <p>
+        For issues related to payment failures or amount not reflecting, send an email with the UTR number and a screenshot to 
+        <a>contact@credifymoney.in</a>.
+    </p>
     <div id="progressModal">
-        <h3>⚡ Processing Payment...</h3>
+        <h3>⚡Processing Payment..⚡</h3>
+    <h3>⚠️ Don't Refresh/close this page.⚠️</h3>
         <div id="progressBarContainer">
             <div id="progressBar"></div>
         </div>
