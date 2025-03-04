@@ -53,15 +53,16 @@
     </div>
 
     <script>
-        // Fetch unprocessed UTRs (those with 'N/A' amount) when the page loads
+        // Fetch all UTRs when the page loads
         window.onload = function() {
             fetch('https://paymentcallback.onrender.com/get-utr')
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Fetched UTRs:', data); // Log the data
                     if (data.message && data.message === "No UTRs Found") {
                         alert("No UTR records found.");
                     } else {
-                        displayUTRs(data.data);
+                        displayUTRs(data);
                     }
                 })
                 .catch(error => console.error('Error fetching UTRs:', error));
@@ -72,15 +73,23 @@
             const container = document.getElementById('utrContainer');
             container.innerHTML = ''; // Clear any existing data
 
+            if (utrs.length === 0) {
+                container.innerHTML = '<p>No UTRs available for update.</p>';
+            }
+
             utrs.forEach(utr => {
-                const row = document.createElement('div');
-                row.className = 'utr-row';
-                row.innerHTML = `
-                    <span>${utr.mobile} - ${utr.utrNumber}</span>
-                    <input type="number" id="amount_${utr._id}" placeholder="Enter Amount" value="${utr.amount === 'N/A' ? '' : utr.amount}" />
-                    <button onclick="submitAmount('${utr._id}')">Submit</button>
-                `;
-                container.appendChild(row);
+                // Only display UTRs with "N/A" amount
+                if (utr.amount === 'N/A') {
+                    const row = document.createElement('div');
+                    row.className = 'utr-row';
+                    row.id = `utr-${utr._id}`; // Adding id to each row to identify it
+                    row.innerHTML = `
+                        <span>${utr.mobile} - ${utr.utrNumber}</span>
+                        <input type="number" id="amount_${utr._id}" placeholder="Enter Amount" value="" />
+                        <button onclick="submitAmount('${utr._id}')">Submit</button>
+                    `;
+                    container.appendChild(row);
+                }
             });
         }
 
@@ -94,7 +103,6 @@
                 return;
             }
 
-            // Send updated amount to the server
             fetch('https://paymentcallback.onrender.com/update-amount', {
                 method: 'PUT',
                 headers: {
@@ -104,13 +112,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.message === 'Amount Updated Successfully') {
-                    // Hide the updated UTR from the list
-                    document.getElementById(`utr-${utrId}`).style.display = 'none';
-                    alert("✅ Amount Submitted Successfully!");
-                } else {
-                    alert("❌ Error updating amount.");
-                }
+                alert("Amount updated successfully!");
+                document.getElementById(`utr-${utrId}`).remove(); // Remove the updated UTR from the list
             })
             .catch(error => {
                 console.error('Error updating amount:', error);
