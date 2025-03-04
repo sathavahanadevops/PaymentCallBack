@@ -4,6 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit UTR Number</title>
+    <style>
+        #progressContainer {
+            display: none;
+            margin-top: 20px;
+            width: 100%;
+            height: 30px;
+            background: #ddd;
+            border-radius: 5px;
+            position: relative;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background: green;
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        #countdown {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h2>Submit UTR Number</h2>
@@ -11,16 +34,21 @@
     <label>Enter UTR Number</label>
     <input type="text" id="utrNumber" placeholder="Enter UTR Number" required>
     <button onclick="submitUTR()">Submit</button>
+    
+    <div id="progressContainer">
+        <div id="progressBar"></div>
+    </div>
+    <p id="countdown"></p>
     <p id="statusMessage"></p>
 
     <script>
-        // Retrieve mobile number from localStorage
+        let countdownInterval;
+        let utrId; // Store the submitted UTR ID
         const mobile = localStorage.getItem('mobile');
         document.getElementById('mobileDisplay').textContent = mobile;
-    
+
         function submitUTR() {
             const utrNumber = document.getElementById('utrNumber').value;
-            
             if (!utrNumber) {
                 alert("Please enter a UTR Number.");
                 return;
@@ -29,18 +57,60 @@
             fetch('https://paymentcallback.onrender.com/submit-utr', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: mobile, utrNumber: utrNumber })
+                body: JSON.stringify({ mobile, utrNumber })
             })
             .then(response => response.json())
             .then(data => {
-                alert("UTR Submitted Successfully!");
+                if (data.data) {
+                    utrId = data.data._id; // Store UTR ID
+                }
                 document.getElementById('statusMessage').textContent = "UTR Submitted Successfully!";
-                document.getElementById('utrNumber').value = '';
+                startCountdown();
             })
             .catch(error => {
-                alert("Error Submitting UTR.");
                 console.error('Error:', error);
+                alert("Error submitting UTR.");
             });
+        }
+
+        function startCountdown() {
+            let timeLeft = 300; // 5 minutes (300 seconds)
+            const progressBar = document.getElementById("progressBar");
+            const progressContainer = document.getElementById("progressContainer");
+            const countdownText = document.getElementById("countdown");
+
+            progressContainer.style.display = "block";
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                progressBar.style.width = ((300 - timeLeft) / 300) * 100 + "%";
+                countdownText.textContent = `Processing... ${timeLeft} sec remaining`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownText.textContent = "Timeout! Try again.";
+                }
+            }, 1000);
+            
+            // Check for amount update
+            checkAmountUpdate();
+        }
+
+        function checkAmountUpdate() {
+            const interval = setInterval(() => {
+                if (!utrId) return;
+
+                fetch(`https://paymentcallback.onrender.com/get-utr`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.amount && data.amount !== 'N/A') {
+                        clearInterval(interval);
+                        clearInterval(countdownInterval);
+                        document.getElementById("progressContainer").style.display = "none";
+                        document.getElementById("countdown").textContent = "✅ Amount Processed Successfully!";
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }, 5000); // Check every 5 seconds
         }
     </script>
 </body>
