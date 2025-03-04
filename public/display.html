@@ -53,7 +53,7 @@
     </div>
 
     <script>
-        // Fetch all UTRs when the page loads
+        // Fetch unprocessed UTRs (those with 'N/A' amount) when the page loads
         window.onload = function() {
             fetch('https://paymentcallback.onrender.com/get-utr')
                 .then(response => response.json())
@@ -61,7 +61,7 @@
                     if (data.message && data.message === "No UTRs Found") {
                         alert("No UTR records found.");
                     } else {
-                        displayUTRs(data);
+                        displayUTRs(data.data);
                     }
                 })
                 .catch(error => console.error('Error fetching UTRs:', error));
@@ -77,7 +77,7 @@
                 row.className = 'utr-row';
                 row.innerHTML = `
                     <span>${utr.mobile} - ${utr.utrNumber}</span>
-                    <input type="text" id="amount_${utr._id}" value="${utr.amount}" placeholder="Enter Amount">
+                    <input type="number" id="amount_${utr._id}" placeholder="Enter Amount" value="${utr.amount === 'N/A' ? '' : utr.amount}" />
                     <button onclick="submitAmount('${utr._id}')">Submit</button>
                 `;
                 container.appendChild(row);
@@ -94,6 +94,7 @@
                 return;
             }
 
+            // Send updated amount to the server
             fetch('https://paymentcallback.onrender.com/update-amount', {
                 method: 'PUT',
                 headers: {
@@ -103,7 +104,13 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert("Amount updated successfully!");
+                if (data.message === 'Amount Updated Successfully') {
+                    // Hide the updated UTR from the list
+                    document.getElementById(`utr-${utrId}`).style.display = 'none';
+                    alert("✅ Amount Submitted Successfully!");
+                } else {
+                    alert("❌ Error updating amount.");
+                }
             })
             .catch(error => {
                 console.error('Error updating amount:', error);
