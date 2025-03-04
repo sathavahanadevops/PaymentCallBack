@@ -53,11 +53,12 @@ app.post('/submit-utr', async (req, res) => {
 // Modify /get-utr to return all UTRs
 app.get('/get-utr', async (req, res) => {
     try {
-        const allUTRs = await UTR.find().sort({ createdAt: -1 }); // Return all UTRs, sorted by creation date
-        if (!allUTRs || allUTRs.length === 0) {
+        // Only fetch UTRs where amount is 'N/A' (not processed yet)
+        const unprocessedUTRs = await UTR.find({ amount: 'N/A' }).sort({ createdAt: -1 }); // Sort by creation date
+        if (!unprocessedUTRs || unprocessedUTRs.length === 0) {
             return res.json({ message: "No UTRs Found", data: [] });
         }
-        res.json(allUTRs);
+        res.json(unprocessedUTRs);
     } catch (error) {
         console.error('❌ Error Fetching UTRs:', error);
         res.status(500).json({ message: 'Error Fetching UTRs', error });
