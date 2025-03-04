@@ -3,28 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UTR Display</title>
+  <title>UTR Display & Update Amount</title>
 </head>
 <body>
   <h2>Submitted UTR Details</h2>
   <p>Mobile Number: <span id="displayMobile"></span></p>
   <p>UTR Number: <span id="displayUTR"></span></p>
-  <p>Amount: ₹<span id="displayAmount">N/A</span></p>
+  <p>Amount: <span id="displayAmount"></span></p>
 
-  <label>Enter Amount:</label>
+  <label>Update Amount:</label>
   <input type="number" id="amountInput" placeholder="Enter Amount">
-  <button onclick="updateAmount()">Update Amount</button>
+  <button onclick="updateAmount()">Update</button>
 
   <script>
-    let utrId = ''; // Store the MongoDB UTR ID
+    let utrId = null;
 
     function fetchUTR() {
         fetch('https://paymentcallback.onrender.com/get-utr')
         .then(response => response.json())
         .then(data => {
-            if (data._id) {
-                utrId = data._id;
-            }
+            utrId = data._id; // Store UTR ID
             document.getElementById('displayMobile').textContent = data.mobile || 'N/A';
             document.getElementById('displayUTR').textContent = data.utrNumber || 'N/A';
             document.getElementById('displayAmount').textContent = data.amount || 'N/A';
@@ -33,34 +31,29 @@
     }
 
     function updateAmount() {
-        const newAmount = document.getElementById('amountInput').value;
-        
-        if (!utrId) {
-            alert("No UTR record found to update!");
-            return;
-        }
-        if (!newAmount) {
-            alert("Please enter an amount!");
+        const amount = document.getElementById('amountInput').value;
+        if (!amount) {
+            alert("Please enter an amount.");
             return;
         }
 
         fetch('https://paymentcallback.onrender.com/update-amount', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ utrId: utrId, amount: newAmount })
+            body: JSON.stringify({ utrId, amount })
         })
         .then(response => response.json())
         .then(data => {
             alert("Amount Updated Successfully!");
-            fetchUTR(); // Refresh display
+            fetchUTR(); // Refresh the displayed data
         })
         .catch(error => {
             console.error('Error:', error);
-            alert("Error Updating Amount.");
+            alert("Error updating amount.");
         });
     }
 
-    setInterval(fetchUTR, 2000); // Fetch UTR details every 2 seconds
+    setInterval(fetchUTR, 5000); // Refresh every 5 seconds
   </script>
 </body>
 </html>
