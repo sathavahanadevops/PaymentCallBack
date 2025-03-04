@@ -67,10 +67,10 @@
     </style>
 </head>
 <body>
-    <h2>🚀 Submit UTR Number</h2>
+    <h2>Submit UTR Number</h2>
     <p>Your Mobile Number: <span id="mobileDisplay"></span></p>
     <input type="text" id="utrNumber" placeholder="Enter UTR Number" required>
-    <button onclick="submitUTR()">🔥 Submit</button>
+    <button onclick="submitUTR()">Submit</button>
 
     <div id="progressModal">
         <h3>⚡ Processing Payment...</h3>
@@ -141,7 +141,7 @@
                     if (data.amount && data.amount !== 'N/A') {
                         clearInterval(interval);
                         document.getElementById("progressModal").style.display = "none";
-                        alert("🎉 ✅ Amount Processed Successfully!");
+                        alert("✅ Amount Processed Successfully!");
                         confettiEffect();
                     }
                 })
@@ -151,7 +151,7 @@
 
         function confettiEffect() {
             const confetti = document.createElement("div");
-            confetti.innerHTML = "🎊 🎉";
+            confetti.innerHTML = "✅ ✔️ ✅";
             confetti.style.position = "fixed";
             confetti.style.top = "50%";
             confetti.style.left = "50%";
