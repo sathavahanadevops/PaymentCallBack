@@ -187,7 +187,7 @@
         function checkAmountUpdate(utrId) {
             const interval = setInterval(() => {
                 if (!utrId) return;
-                fetch('https://paymentcallback.onrender.com/get-utr')
+                fetch('https://paymentcallback.onrender.com/get-all-utr')
                 .then(response => response.json())
                 .then(allUTRs => {
                     // Find the updated UTR by its unique ID
