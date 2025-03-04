@@ -10,9 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Define utrData to avoid undefined variable error
-let utrData = {};
-
 // MongoDB Connection
 const mongoURI = 'mongodb+srv://sathavahana:Kalava1%40%2E@project2025.frxyb.mongodb.net/Project2025?retryWrites=true&w=majority&appName=Project2025';
 mongoose.connect(mongoURI)
@@ -28,12 +25,18 @@ const utrSchema = new mongoose.Schema({
 });
 const UTR = mongoose.model('UTR', utrSchema);
 
-// Endpoint to receive UTR and mobile number
-app.post('/submit-utr', (req, res) => {
+// Endpoint to receive UTR and mobile number, and save to MongoDB
+app.post('/submit-utr', async (req, res) => {
     const { mobile, utrNumber } = req.body;
-    utrData = { mobile, utrNumber };
-    console.log('Received UTR:', utrData);
-    res.json({ message: 'UTR Received', data: utrData });
+    try {
+        const newUTR = new UTR({ mobile, utrNumber, amount: 'N/A' }); // Default amount to 'N/A'
+        await newUTR.save();
+        console.log('UTR Stored in MongoDB:', newUTR);
+        res.json({ message: 'UTR Stored Successfully', data: newUTR });
+    } catch (error) {
+        console.error('Error Storing UTR:', error);
+        res.status(500).json({ message: 'Error Storing UTR', error });
+    }
 });
 
 // Endpoint to get the latest UTR details from MongoDB
