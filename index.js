@@ -81,49 +81,49 @@ app.get('/get-utr', async (req, res) => {
 
 // Endpoint to Update Amount for a Single UTR
 app.post('/update-amount', async (req, res) => {
-    const { mobile, utrNumber, amount } = req.body;
+    const { utrNumber, amount } = req.body;
 
-    if (!mobile || !utrNumber || !amount) {
-        return res.status(400).json({ message: "Mobile, UTR Number, and Amount are required." });
+    if (!utrNumber || !amount) {
+        return res.status(400).json({ message: "UTR Number and Amount are required." });
     }
 
     try {
-        // Check if UTR already exists for this mobile number
-        let existingUTR = await UTR.findOne({ mobile, utrNumber });
+        // Find UTR entry by UTR Number
+        let existingUTR = await UTR.findOne({ utrNumber });
 
-        if (existingUTR) {
-            console.log('✅ UTR Already Exists:', existingUTR);
-            return res.json({ message: 'UTR Already Exists', data: existingUTR });
+        if (!existingUTR) {
+            return res.status(404).json({ message: "UTR Not Found." });
         }
 
-        // Convert amount to number to avoid issues
+        console.log('✅ UTR Found:', existingUTR);
+
+        // Convert amount to number
         const amountNumber = parseFloat(amount);
         if (isNaN(amountNumber)) {
             return res.status(400).json({ message: "Invalid amount format." });
         }
 
-        // If UTR doesn't exist, store the new UTR entry
-        const newUTR = new UTR({ mobile, utrNumber, amount: amountNumber.toString(), createdAt: new Date() });
-        await newUTR.save();
+        // Update UTR amount
+        existingUTR.amount = amountNumber.toString();
+        await existingUTR.save();
+        console.log('✅ UTR Amount Updated:', existingUTR);
 
-        console.log('✅ New UTR Stored:', newUTR);
-
-        // Update balance in the profile collection
+        // Find the associated profile using mobile from UTR
         const updatedProfile = await Profile.findOneAndUpdate(
-            { mobile: mobile },
+            { mobile: existingUTR.mobile },
             { $inc: { balance: amountNumber } },
-            { new: true } // Return updated document
+            { new: true }
         );
 
         if (!updatedProfile) {
-            return res.status(404).json({ message: "Profile not found for this mobile number." });
+            return res.status(404).json({ message: "Profile not found for this UTR." });
         }
 
-        console.log('✅ Balance Updated for Profile:', updatedProfile);
+        console.log('✅ Profile Balance Updated:', updatedProfile);
 
         res.json({
-            message: "UTR Stored & Balance Updated Successfully",
-            utr: newUTR,
+            message: "UTR Amount & Profile Balance Updated Successfully",
+            utr: existingUTR,
             profile: updatedProfile
         });
 
