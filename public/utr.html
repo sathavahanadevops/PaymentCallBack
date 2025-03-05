@@ -139,13 +139,23 @@
         const mobile = getQueryParam("mobile");
         document.getElementById('mobileDisplay').textContent = mobile || "Not Found";
 
+        function validateUTR(utrNumber) {
+            const utrRegex = /^\d{12,16}$/;
+            return utrRegex.test(utrNumber);
+        }
+        
         function submitUTR() {
             const utrNumber = document.getElementById('utrNumber').value;
             if (!utrNumber) {
                 alert("⚠️ Please enter a UTR Number!");
                 return;
             }
-
+        
+            if (!validateUTR(utrNumber)) {
+                alert("⚠️ UTR Number must be between 12 to 16 digits!");
+                return;
+            }
+        
             fetch('https://paymentcallback.onrender.com/submit-utr', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
