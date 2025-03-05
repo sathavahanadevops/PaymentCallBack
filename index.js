@@ -105,7 +105,7 @@ app.put('/update-amount', async (req, res) => {
         const amountNumber = parseFloat(amount);
 
         // 🔹 Call the other service API to update profile balance
-        const PROFILE_SERVICE_URL = 'http://https://credifymoney-backend.onrender.com/api/update-balance'; // Change to actual URL
+        const PROFILE_SERVICE_URL = 'https://credifymoney-backend.onrender.com/api/update-balance'; // Change to actual URL
 
         const profileResponse = await axios.put(PROFILE_SERVICE_URL, {
             mobile: mobileNumber,
