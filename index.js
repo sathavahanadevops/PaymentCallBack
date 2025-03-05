@@ -80,32 +80,58 @@ app.get('/get-utr', async (req, res) => {
 });
 
 // Endpoint to Update Amount for a Single UTR
-app.put('/update-amount', async (req, res) => {
-    const { utrId, amount } = req.body;
+app.post('/submit-utr', async (req, res) => {
+    const { mobile, utrNumber, amount } = req.body;
 
-    if (!utrId || !amount) {
-        return res.status(400).json({ message: 'Missing UTR ID or Amount' });
+    if (!mobile || !utrNumber || !amount) {
+        return res.status(400).json({ message: "Mobile, UTR Number, and Amount are required." });
     }
 
     try {
-        // Find the UTR by its ID and update the amount
-        const updatedUTR = await UTR.findByIdAndUpdate(
-            utrId,
-            { $set: { amount: amount } },
-            { new: true } // Return the updated document
-        );
+        // Check if UTR already exists for this mobile number
+        let existingUTR = await UTR.findOne({ mobile, utrNumber });
 
-        if (!updatedUTR) {
-            return res.status(404).json({ message: 'UTR not found' });
+        if (existingUTR) {
+            console.log('✅ UTR Already Exists:', existingUTR);
+            return res.json({ message: 'UTR Already Exists', data: existingUTR });
         }
 
-        res.json({ message: 'Amount updated successfully', updatedUTR });
+        // Convert amount to number to avoid issues
+        const amountNumber = parseFloat(amount);
+        if (isNaN(amountNumber)) {
+            return res.status(400).json({ message: "Invalid amount format." });
+        }
+
+        // If UTR doesn't exist, store the new UTR entry
+        const newUTR = new UTR({ mobile, utrNumber, amount: amountNumber.toString(), createdAt: new Date() });
+        await newUTR.save();
+
+        console.log('✅ New UTR Stored:', newUTR);
+
+        // Update balance in the profile collection
+        const updatedProfile = await Profile.findOneAndUpdate(
+            { mobile: mobile },
+            { $inc: { balance: amountNumber } },
+            { new: true } // Return updated document
+        );
+
+        if (!updatedProfile) {
+            return res.status(404).json({ message: "Profile not found for this mobile number." });
+        }
+
+        console.log('✅ Balance Updated for Profile:', updatedProfile);
+
+        res.json({
+            message: "UTR Stored & Balance Updated Successfully",
+            utr: newUTR,
+            profile: updatedProfile
+        });
+
     } catch (error) {
-        console.error('❌ Error updating amount:', error);
-        res.status(500).json({ message: 'Error updating amount', error });
+        console.error('❌ Error Processing UTR:', error);
+        res.status(500).json({ message: 'Internal Server Error', error });
     }
 });
-
 
 // 🔹 Serve `utr.html` and `display.html`
 app.get('/utr', (req, res) => {
