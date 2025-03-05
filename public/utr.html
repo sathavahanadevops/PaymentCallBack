@@ -140,31 +140,27 @@
         document.getElementById('mobileDisplay').textContent = mobile || "Not Found";
 
         function submitUTR() {
-            const utrNumber = document.getElementById('utrNumber').value;
-            if (!utrNumber) {
-                alert("⚠️ Please enter a UTR Number!");
-                return;
-            }
-            if (utrNumber.length < 12 || utrNumber.length > 16 || !/^\d+$/.test(utrNumber)) {
-                alert("⚠️ UTR Number must be between 12 to 16 digits!");
-                return;
-            }
-    
-            fetch('https://paymentcallback.onrender.com/submit-utr', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile, utrNumber })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showProcessingModal();
-                checkAmountUpdate(data.data?._id);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("❌ Error submitting UTR.");
-            });
+        const utrNumber = document.getElementById('utrNumber').value;
+        if (!utrNumber) {
+            alert("⚠️ Please enter a UTR Number!");
+            return;
         }
+
+        fetch('https://paymentcallback.onrender.com/submit-utr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile, utrNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showProcessingModal();
+            checkAmountUpdate(data.data?._id);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("❌ Error submitting UTR.");
+        });
+    }
 
         function showProcessingModal() {
             document.getElementById('progressModal').style.display = "block";
