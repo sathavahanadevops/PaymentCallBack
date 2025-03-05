@@ -1,3 +1,4 @@
+const axios = require('axios'); // Import axios to make HTTP requests
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -84,11 +85,11 @@ app.put('/update-amount', async (req, res) => {
     const { utrId, amount } = req.body;
 
     if (!utrId || !amount) {
-        return res.status(400).json({ message: "UTR ID and Amount are required." });
+        return res.status(400).json({ message: 'Missing UTR ID or Amount' });
     }
 
     try {
-        // Find the UTR by its ID and update the amount
+        // Find the UTR by ID and update the amount
         const updatedUTR = await UTR.findByIdAndUpdate(
             utrId,
             { $set: { amount: amount } },
@@ -96,36 +97,37 @@ app.put('/update-amount', async (req, res) => {
         );
 
         if (!updatedUTR) {
-            return res.status(404).json({ message: "UTR not found." });
+            return res.status(404).json({ message: 'UTR not found' });
         }
 
-        // Update the corresponding profile balance
+        // 🔹 Get mobile number from UTR entry
+        const mobileNumber = updatedUTR.mobile;
         const amountNumber = parseFloat(amount);
-        if (isNaN(amountNumber)) {
-            return res.status(400).json({ message: "Invalid amount format." });
-        }
 
-        const updatedProfile = await Profile.findOneAndUpdate(
-            { mobile: updatedUTR.mobile },  // Find profile by mobile number
-            { $inc: { balance: amountNumber } },
-            { new: true }
-        );
+        // 🔹 Call the other service API to update profile balance
+        const PROFILE_SERVICE_URL = 'http://https://credifymoney-backend.onrender.com/api/update-balance'; // Change to actual URL
 
-        if (!updatedProfile) {
-            return res.status(404).json({ message: "Profile not found for this UTR." });
-        }
-
-        res.json({
-            message: "Amount Updated Successfully",
-            updatedUTR,
-            updatedProfile
+        const profileResponse = await axios.put(PROFILE_SERVICE_URL, {
+            mobile: mobileNumber,
+            amount: amountNumber
         });
 
+        if (profileResponse.data.success) {
+            return res.json({
+                message: 'Amount updated successfully & Profile balance updated',
+                updatedUTR,
+                profile: profileResponse.data.profile
+            });
+        } else {
+            return res.status(500).json({ message: 'Failed to update profile balance' });
+        }
+
     } catch (error) {
-        console.error("❌ Error updating amount:", error);
-        res.status(500).json({ message: "Error updating amount", error });
+        console.error('❌ Error updating amount:', error);
+        res.status(500).json({ message: 'Error updating amount', error });
     }
 });
+
 
 // 🔹 Serve `utr.html` and `display.html`
 app.get('/utr', (req, res) => {
@@ -139,6 +141,7 @@ app.get('/display', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({ status: 'UP' });
 });
+
 
 // 🔹 Start the Server
 const PORT = process.env.PORT || 3000;
