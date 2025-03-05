@@ -44,39 +44,17 @@
             width: 60%;
             margin-left: 10px;
         }
-        .login-container {
-            margin: 20px auto;
-            width: 80%;
-        }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
     <h1>Update UTR Amounts</h1>
-    <div class="login-container" id="loginContainer">
-        <input type="text" id="username" placeholder="Username" />
-        <input type="password" id="password" placeholder="Password" />
-        <button onclick="login()">Login</button>
-    </div>
-    <div class="utr-container hidden" id="utrContainer">
+    <div class="utr-container" id="utrContainer">
         <!-- UTR fields will be dynamically inserted here -->
     </div>
 
     <script>
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (username === 'admin' && password === 'admin@123') {
-                document.getElementById('loginContainer').classList.add('hidden');
-                document.getElementById('utrContainer').classList.remove('hidden');
-                fetchUTRs();
-            } else {
-                alert('Invalid credentials');
-            }
-        }
-
-        function fetchUTRs() {
+        // Fetch all UTRs when the page loads
+        window.onload = function() {
             fetch('https://paymentcallback.onrender.com/get-utr')
                 .then(response => response.json())
                 .then(data => {
@@ -88,7 +66,7 @@
                     }
                 })
                 .catch(error => console.error('Error fetching UTRs:', error));
-        }
+        };
 
         // Display all UTRs with amount input fields and individual submit buttons
         function displayUTRs(utrs) {
