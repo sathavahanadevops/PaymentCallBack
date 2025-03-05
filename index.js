@@ -80,37 +80,33 @@ app.get('/get-utr', async (req, res) => {
 });
 
 // Endpoint to Update Amount for a Single UTR
-app.post('/update-amount', async (req, res) => {
-    const { utrNumber, amount } = req.body;
+app.put('/update-amount', async (req, res) => {
+    const { utrId, amount } = req.body;
 
-    if (!utrNumber || !amount) {
-        return res.status(400).json({ message: "UTR Number and Amount are required." });
+    if (!utrId || !amount) {
+        return res.status(400).json({ message: "UTR ID and Amount are required." });
     }
 
     try {
-        // Find UTR entry by UTR Number
-        let existingUTR = await UTR.findOne({ utrNumber });
+        // Find the UTR by its ID and update the amount
+        const updatedUTR = await UTR.findByIdAndUpdate(
+            utrId,
+            { $set: { amount: amount } },
+            { new: true } // Return the updated document
+        );
 
-        if (!existingUTR) {
-            return res.status(404).json({ message: "UTR Not Found." });
+        if (!updatedUTR) {
+            return res.status(404).json({ message: "UTR not found." });
         }
 
-        console.log('✅ UTR Found:', existingUTR);
-
-        // Convert amount to number
+        // Update the corresponding profile balance
         const amountNumber = parseFloat(amount);
         if (isNaN(amountNumber)) {
             return res.status(400).json({ message: "Invalid amount format." });
         }
 
-        // Update UTR amount
-        existingUTR.amount = amountNumber.toString();
-        await existingUTR.save();
-        console.log('✅ UTR Amount Updated:', existingUTR);
-
-        // Find the associated profile using mobile from UTR
         const updatedProfile = await Profile.findOneAndUpdate(
-            { mobile: existingUTR.mobile },
+            { mobile: updatedUTR.mobile },  // Find profile by mobile number
             { $inc: { balance: amountNumber } },
             { new: true }
         );
@@ -119,17 +115,15 @@ app.post('/update-amount', async (req, res) => {
             return res.status(404).json({ message: "Profile not found for this UTR." });
         }
 
-        console.log('✅ Profile Balance Updated:', updatedProfile);
-
         res.json({
-            message: "UTR Amount & Profile Balance Updated Successfully",
-            utr: existingUTR,
-            profile: updatedProfile
+            message: "Amount Updated Successfully",
+            updatedUTR,
+            updatedProfile
         });
 
     } catch (error) {
-        console.error('❌ Error Processing UTR:', error);
-        res.status(500).json({ message: 'Internal Server Error', error });
+        console.error("❌ Error updating amount:", error);
+        res.status(500).json({ message: "Error updating amount", error });
     }
 });
 
