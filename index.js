@@ -85,13 +85,10 @@ app.put('/update-amount', async (req, res) => {
     const { utrId, amount } = req.body;
 
     if (!utrId || !amount) {
-        console.error("❌ Missing UTR ID or Amount", { utrId, amount });
         return res.status(400).json({ message: 'Missing UTR ID or Amount' });
     }
 
     try {
-        console.log("🔹 Searching for UTR:", utrId);
-
         // Find the UTR by ID and update the amount
         const updatedUTR = await UTR.findByIdAndUpdate(
             utrId,
@@ -100,45 +97,37 @@ app.put('/update-amount', async (req, res) => {
         );
 
         if (!updatedUTR) {
-            console.error("❌ UTR not found:", utrId);
             return res.status(404).json({ message: 'UTR not found' });
         }
-
-        console.log("✅ UTR found & updated:", updatedUTR);
 
         // 🔹 Get mobile number from UTR entry
         const mobileNumber = updatedUTR.mobile;
         const amountNumber = parseFloat(amount);
 
-        console.log("🔹 Sending profile update for mobile:", mobileNumber, "Amount:", amountNumber);
-
         // 🔹 Call the other service API to update profile balance
-        const PROFILE_SERVICE_URL = 'https://credifymoney-backend.onrender.com/api/update-balance';
+        const PROFILE_SERVICE_URL = 'https://credifymoney-backend.onrender.com/api/update-balance'; // Change to actual URL
 
         const profileResponse = await axios.put(PROFILE_SERVICE_URL, {
             mobile: mobileNumber,
             amount: amountNumber
         });
 
-        console.log("🔹 Profile API Response:", profileResponse.data);
-
         if (profileResponse.data.success) {
-            console.log("✅ Profile balance updated successfully");
             return res.json({
                 message: 'Amount updated successfully & Profile balance updated',
                 updatedUTR,
                 profile: profileResponse.data.profile
             });
         } else {
-            console.error("❌ Failed to update profile balance:", profileResponse.data);
             return res.status(500).json({ message: 'Failed to update profile balance' });
         }
 
     } catch (error) {
-        console.error('❌ Error updating amount:', error.response?.data || error.message);
+        console.error('❌ Error updating amount:', error);
         res.status(500).json({ message: 'Error updating amount', error });
     }
 });
+
 
 // 🔹 Serve `utr.html` and `display.html`
 app.get('/utr', (req, res) => {
