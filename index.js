@@ -80,7 +80,7 @@ app.get('/get-utr', async (req, res) => {
 });
 
 // Endpoint to Update Amount for a Single UTR
-app.post('/submit-utr', async (req, res) => {
+app.post('/update-amount', async (req, res) => {
     const { mobile, utrNumber, amount } = req.body;
 
     if (!mobile || !utrNumber || !amount) {
