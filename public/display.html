@@ -64,17 +64,31 @@
 
     <script>
         function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (username === 'admin' && password === 'admin@123') {
-                document.getElementById('loginContainer').classList.add('hidden');
-                document.getElementById('utrContainer').classList.remove('hidden');
-                fetchUTRs();
-            } else {
-                alert('Invalid credentials');
-            }
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+    
+        if (username === 'admin' && password === 'admin@123') {
+            localStorage.setItem('username', username);
+            localStorage.setItem('password', password);
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('utrContainer').classList.remove('hidden');
+            fetchUTRs();
+        } else {
+            alert('Invalid credentials');
         }
+    }
+    
+    // Auto-login if credentials are stored
+    window.onload = function () {
+        const storedUsername = localStorage.getItem('username');
+        const storedPassword = localStorage.getItem('password');
+    
+        if (storedUsername === 'admin' && storedPassword === 'admin@123') {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('utrContainer').classList.remove('hidden');
+            fetchUTRs();
+        }
+    };
 
         function fetchUTRs() {
             fetch('https://paymentcallback.onrender.com/get-utr')
